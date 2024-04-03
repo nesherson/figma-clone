@@ -4,7 +4,11 @@ import { useMyPresence, useOthers } from "@/liveblocks.config";
 import CursorChat from "./cursor/CursorChat";
 import { CursorMode } from "@/types/type";
 
-export default function Live() {
+type Props = {
+  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>
+}
+
+export default function Live({ canvasRef }: Props) {
   const others = useOthers();
   const [{ cursor }, updateMyPresence] = useMyPresence() as any;
   const [cursorState, setCursorState] = useState({
@@ -35,45 +39,46 @@ export default function Live() {
 
   useEffect(() => {
     const onKeyUp = (e: KeyboardEvent) => {
-        if (e.key === "/") {
-            setCursorState({
-                mode: CursorMode.Chat,
-                previousMessage: null,
-                message: ""
-            });
-        }
-        else if (e.key === "Escape") {
-            updateMyPresence({
-                message: ""
-            });
-            setCursorState({
-                mode: CursorMode.Hidden
-            });
-        }
+      if (e.key === "/") {
+        setCursorState({
+          mode: CursorMode.Chat,
+          previousMessage: null,
+          message: ""
+        });
+      }
+      else if (e.key === "Escape") {
+        updateMyPresence({
+          message: ""
+        });
+        setCursorState({
+          mode: CursorMode.Hidden
+        });
+      }
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "/") {
-            e.preventDefault();
-        }
+      if (e.key === "/") {
+        e.preventDefault();
+      }
     };
 
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("keydown", onKeyDown);
 
     return () => {
-        window.removeEventListener("keyup", onKeyUp);
-        window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("keydown", onKeyDown);
     };
   }, [updateMyPresence]);
   return (
     <div
+      id="canvas"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
       onPointerDown={handlePointerDown}
       className="h-[100vh] w-full flex justify-center items-center text-center"
     >
-      <h1 className="text-2xl text-white">Figma Clone</h1>
+      <canvas ref={canvasRef} />
 
       {cursor && (
         <CursorChat

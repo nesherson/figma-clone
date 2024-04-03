@@ -1,5 +1,5 @@
 import { BaseUserMeta, User } from "@liveblocks/client";
-import { Gradient, Pattern } from "fabric/fabric-impl";
+// import { Gradient, Pattern } from "fabric/fabric-impl";
 
 export enum CursorMode {
   Hidden,
@@ -38,15 +38,15 @@ export type ReactionEvent = {
   value: string;
 };
 
-export type ShapeData = {
-  type: string;
-  width: number;
-  height: number;
-  fill: string | Pattern | Gradient;
-  left: number;
-  top: number;
-  objectId: string | undefined;
-};
+// export type ShapeData = {
+//   type: string;
+//   width: number;
+//   height: number;
+//   fill: string | Pattern | Gradient;
+//   left: number;
+//   top: number;
+//   objectId: string | undefined;
+// };
 
 export type Attributes = {
   width: string;
