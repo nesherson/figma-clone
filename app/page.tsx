@@ -9,6 +9,8 @@ import { fabric } from "fabric";
 import { handleCanvasMouseDown, handleCanvasMouseMove, handleResize, initializeFabric, handleCanvasMouseUp, renderCanvas, handleCanvasObjectModified } from "@/lib/canvas";
 import { ActiveElement } from "@/types/type";
 import { useMutation, useStorage } from "@/liveblocks.config";
+import { defaultNavElement } from "@/constants";
+import { handleDelete } from "@/lib/key-events";
 
 export default function Page() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -35,10 +37,39 @@ export default function Page() {
     canvasObjects.set(objectId, shapeData);
   }, []);
 
+  const deleteAllShapesFromStorage = useMutation(({ storage }) => {
+    const canvasObjects = storage.get("canvasObjects");
+
+    if (!canvasObjects || canvasObjects.size === 0) 
+      return true;
+
+    for (const[key, value] of canvasObjects.entries()) {
+      canvasObjects.delete(key);
+    }
+
+    return canvasObjects.size === 0;
+  }, []);
+
+  const deleteShapeFromStorage = useMutation(({ storage }, objectId) => {
+    const canvasObjects = storage.get("canvasObjects");
+
+    canvasObjects.delete(objectId);
+  }, []);
+
   const handleActiveElement = (element: ActiveElement) => {
     setActiveElement(element);
 
     selectedShapeRef.current = element?.value as string;
+
+    if (element?.value === "delete") {
+      handleDelete(fabricRef.current as any, deleteShapeFromStorage);
+      setActiveElement(defaultNavElement);
+    }
+    else if (element?.value === "reset") {
+      deleteAllShapesFromStorage();
+      fabricRef.current?.clear();
+      setActiveElement(defaultNavElement);
+    }
   }
 
   useEffect(() => {
@@ -86,6 +117,10 @@ export default function Page() {
     window.addEventListener("resize", () => {
       handleResize({ fabricRef });
     });
+
+    return () => {
+      canvas.dispose();
+    };
   }, []);
 
   useEffect(() => {
