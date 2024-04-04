@@ -8,22 +8,26 @@ import { useEffect, useRef, useState } from "react";
 import { fabric } from "fabric";
 import { handleCanvasMouseDown, handleCanvasMouseMove, handleResize, initializeFabric, handleCanvasMouseUp, renderCanvas, handleCanvasObjectModified } from "@/lib/canvas";
 import { ActiveElement } from "@/types/type";
-import { useMutation, useStorage } from "@/liveblocks.config";
+import { useMutation, useRedo, useStorage, useUndo } from "@/liveblocks.config";
 import { defaultNavElement } from "@/constants";
-import { handleDelete } from "@/lib/key-events";
+import { handleDelete, handleKeyDown } from "@/lib/key-events";
+import { handleImageUpload } from "@/lib/shapes";
 
 export default function Page() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
   const isDrawing = useRef(false);
   const shapeRef = useRef<fabric.Object | null>(null);
-  const selectedShapeRef = useRef<string | null>("rectangle");
+  const selectedShapeRef = useRef<string | null>(null);
   const activeObjectRef = useRef<fabric.Object | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [activeElement, setActiveElement] = useState<ActiveElement>({
     name: "",
     value: "",
     icon: ""
   });
+  const undo = useUndo();
+  const redo = useRedo();
   const canvasObjects = useStorage((root) => root.canvasObjects);
   const syncShapeInStorage = useMutation(({ storage }, object) => {
     if (!object)
@@ -40,10 +44,10 @@ export default function Page() {
   const deleteAllShapesFromStorage = useMutation(({ storage }) => {
     const canvasObjects = storage.get("canvasObjects");
 
-    if (!canvasObjects || canvasObjects.size === 0) 
+    if (!canvasObjects || canvasObjects.size === 0)
       return true;
 
-    for (const[key, value] of canvasObjects.entries()) {
+    for (const [key, value] of canvasObjects.entries()) {
       canvasObjects.delete(key);
     }
 
@@ -61,14 +65,26 @@ export default function Page() {
 
     selectedShapeRef.current = element?.value as string;
 
-    if (element?.value === "delete") {
-      handleDelete(fabricRef.current as any, deleteShapeFromStorage);
-      setActiveElement(defaultNavElement);
-    }
-    else if (element?.value === "reset") {
-      deleteAllShapesFromStorage();
-      fabricRef.current?.clear();
-      setActiveElement(defaultNavElement);
+    switch (element?.value) {
+      case "delete":
+        handleDelete(fabricRef.current as any, deleteShapeFromStorage);
+        setActiveElement(defaultNavElement);
+        break;
+
+      case "reset":
+        deleteAllShapesFromStorage();
+        fabricRef.current?.clear();
+        setActiveElement(defaultNavElement);
+        break;
+
+      case "image":
+        imageInputRef.current?.click();
+        isDrawing.current = false;
+
+        if (fabricRef.current) {
+          fabricRef.current.isDrawingMode = false;
+        }
+        break;
     }
   }
 
@@ -118,6 +134,17 @@ export default function Page() {
       handleResize({ fabricRef });
     });
 
+    window.addEventListener("keydown", (e) => {
+      handleKeyDown({
+        e,
+        canvas: fabricRef.current,
+        undo,
+        redo,
+        syncShapeInStorage,
+        deleteShapeFromStorage
+      });
+    });
+
     return () => {
       canvas.dispose();
     };
@@ -131,9 +158,20 @@ export default function Page() {
     <main className="h-screen overflow-hidden">
       <Navbar
         activeElement={activeElement}
-        handleActiveElement={handleActiveElement} />
+        handleActiveElement={handleActiveElement}
+        imageInputRef={imageInputRef}
+        handleImageUpload={(e) => {
+          e.stopPropagation();
+
+          handleImageUpload({
+            file: e.target.files[0],
+            fabricRef: fabricRef as any,
+            shapeRef,
+            syncShapeInStorage
+          });
+        }} />
       <section className="flex h-full flex-row">
-        <LeftSidebar />
+        <LeftSidebar allShapes={Array.from(canvasObjects)} />
         <Live canvasRef={canvasRef} />
         <RightSidebar />
       </section>

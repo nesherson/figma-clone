@@ -92,7 +92,7 @@ export const createSpecificShape = (
 
 export const handleImageUpload = ({
   file,
-  canvas,
+  fabricRef,
   shapeRef,
   syncShapeInStorage,
 }: ImageUpload) => {
@@ -103,7 +103,7 @@ export const handleImageUpload = ({
       img.scaleToWidth(200);
       img.scaleToHeight(200);
 
-      canvas.current.add(img);
+      fabricRef.current.add(img);
 
       // @ts-ignore
       img.objectId = uuidv4();
@@ -111,7 +111,7 @@ export const handleImageUpload = ({
       shapeRef.current = img;
 
       syncShapeInStorage(img);
-      canvas.current.requestRenderAll();
+      fabricRef.current.requestRenderAll();
     });
   };
 
