@@ -4,6 +4,7 @@ import Text from "../settings/Text";
 import Export from "../settings/Export";
 import Color from "../settings/Color";
 import { RightSidebarProps } from "@/types/type";
+import { modifyShape } from "@/lib/shapes";
 
 export default function RightSidebar({
     elementAttributes,
@@ -19,7 +20,15 @@ export default function RightSidebar({
         setElementAttributes((prev) => ({
             ...prev,
             [property]: value
-        }))
+        }));
+
+        modifyShape({
+            canvas: fabricRef.current as fabric.Canvas,
+            property,
+            value,
+            activeObjectRef,
+            syncShapeInStorage
+        });
     }
     return <section className="flex flex-col border-t border-primary-grey-200 bg-primary-black text-primary-grey-300 min-w-[227px] sticky right-0 h-full max-sm:hidden select-none">
         <h3 className="px-5 pt-4 text-xs uppercase">Design</h3>
@@ -27,6 +36,7 @@ export default function RightSidebar({
         <Dimensions
             width={elementAttributes.width}
             height={elementAttributes.height}
+            isEditingRef={isEditingRef}
             handleInputChange={handleInputChange} />
         <Text />
         <Color />
