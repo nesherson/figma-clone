@@ -38,7 +38,12 @@ export default function RightSidebar({
             height={elementAttributes.height}
             isEditingRef={isEditingRef}
             handleInputChange={handleInputChange} />
-        <Text />
+        <Text
+            fontFamily={elementAttributes.fontFamily}
+            fontSize={elementAttributes.fontSize}
+            fontWeight={elementAttributes.fontWeight}
+            handleInputChange={handleInputChange}
+         />
         <Color />
         <Color />
         <Export />
