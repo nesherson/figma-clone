@@ -6,7 +6,7 @@ import LeftSidebar from "@/components/sidebar/LeftSidebar";
 import RightSidebar from "@/components/sidebar/RightSidebar";
 import { useEffect, useRef, useState } from "react";
 import { fabric } from "fabric";
-import { handleCanvasMouseDown, handleCanvasMouseMove, handleResize, initializeFabric, handleCanvasMouseUp, renderCanvas, handleCanvasObjectModified, handleCanvasSelectionCreated, handleCanvasObjectMoving, handleCanvasObjectScaling } from "@/lib/canvas";
+import { handleCanvasMouseDown, handleCanvasMouseMove, handleResize, initializeFabric, handleCanvasMouseUp, renderCanvas, handleCanvasObjectModified, handleCanvasSelectionCreated, handleCanvasObjectMoving, handleCanvasObjectScaling, handlePathCreated } from "@/lib/canvas";
 import { ActiveElement, Attributes } from "@/types/type";
 import { useMutation, useRedo, useStorage, useUndo } from "@/liveblocks.config";
 import { defaultNavElement } from "@/constants";
@@ -154,6 +154,13 @@ export default function Page() {
       });
     });
 
+    canvas.on("path:created", (options) => {
+      handlePathCreated({
+        options,
+        syncShapeInStorage
+      });
+    });
+
     window.addEventListener("resize", () => {
       handleResize({ fabricRef });
     });
@@ -196,15 +203,15 @@ export default function Page() {
         }} />
       <section className="flex h-full flex-row">
         <LeftSidebar allShapes={Array.from(canvasObjects)} />
-        <Live canvasRef={canvasRef} />
-        <RightSidebar 
-          elementAttributes={elementAttributes} 
-          setElementAttributes={setElementAttributes} 
-          fabricRef={fabricRef} 
+        <Live canvasRef={canvasRef} undo={undo} redo={redo} />
+        <RightSidebar
+          elementAttributes={elementAttributes}
+          setElementAttributes={setElementAttributes}
+          fabricRef={fabricRef}
           isEditingRef={isEditingRef}
           activeObjectRef={activeObjectRef}
           syncShapeInStorage={syncShapeInStorage}
-          />
+        />
       </section>
     </main>
   );
